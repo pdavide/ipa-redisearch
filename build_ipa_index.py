@@ -1,11 +1,14 @@
+import os, sys
+import socket
+import time
 import pandas as pd
 import redis
-import time
+from redis.sentinel import Sentinel
 from redisearch import Client, TextField, TagField
 
 def wait_for_redis():
     print('Waiting for Redis server to be ready', flush=True)
-    rc = redis.Redis()
+    rc = redis.Redis(password=os.environ['REDIS_PASSWORD'])
     ping = False
     while ping == False:
         try:
@@ -15,9 +18,34 @@ def wait_for_redis():
         time.sleep(1)
     print('Redis server ready', flush=True)
 
+def check_sentinel():
+    print('Checking if this instance is sentinel managed', flush=True)
+    try:
+        os.environ['REDIS_SENTINEL_HOST']
+    except KeyError:
+        print('REDIS_SENTINEL_HOST environment variable not set', flush=True)
+
+        return
+
+    sentinel = Sentinel([(os.environ['REDIS_SENTINEL_HOST'], os.environ.get('REDIS_SENTINEL_PORT_NUMBER', 26379))], socket_timeout=0.1)
+    sentinel_master = sentinel.discover_master(os.environ.get('REDIS_MASTER_SET', 'ipa-redisearch'))
+    if sentinel_master is not None:
+        hostname = socket.gethostname()
+        ip_addr = socket.gethostbyname(hostname)
+
+        if ip_addr != sentinel_master[0]: # this is a slave
+            print('This is a sentinel managed slave:', flush=True)
+            print('index updates are executed only on the master instance', flush=True)
+            sys.exit(0)
+        else:
+            print('This is a sentinel managed master', flush=True)
+    else:
+        raise Exception('Sentinel master not available') 
+
 def build_ipa_index():
     start_time = time.time()
-    rs_client = Client('IPAIndex')
+    rc = redis.Redis(password=os.environ['REDIS_PASSWORD'])
+    rs_client = Client('IPAIndex', conn=rc)
 
     try:
         rs_client.drop_index()
@@ -71,7 +99,7 @@ def get_ipa_amm_item(ipa_amm_row):
     ipa_amm_item = {
         'ipa_code': ipa_amm_row['cod_amm'],
         'name': ipa_amm_row['des_amm'],
-        'site': ipa_amm_row['sito_istituzionale'],
+        'site': ipa_amm_row['sito_istituzionale'] if ipa_amm_row.notnull()['sito_istituzionale'] else '',
         'city': ipa_amm_row['Comune'],
         'county': ipa_amm_row['Provincia'],
         'region': ipa_amm_row['Regione'],
@@ -110,4 +138,5 @@ def get_first_pec(ipa_row):
     return None
 
 wait_for_redis()
+check_sentinel()
 build_ipa_index()
