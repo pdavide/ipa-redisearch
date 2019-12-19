@@ -18,9 +18,6 @@ Supported env variables:
 
 - [env vars supported in
   bitnami-docker-redis](https://github.com/bitnami/bitnami-docker-redis#configuration)
-- `REDIS_SENTINEL_HOST` (mandatory only for sentinel support)
-- `REDIS_SENTINEL_PORT_NUMBER` (mandatory only for sentinel support)
-- `REDIS_MASTER_SET` (mandatory only for sentinel support)
 
 ## Usage
 
