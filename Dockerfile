@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y git automake build-essential cmake && \
   git clone --branch ${REDISEARCH_GITHUB_BRANCH} https://github.com/RedisLabsModules/RediSearch.git && \
   cd RediSearch && \
   make all && \
-  rm -rf /var/lib/apt/lists/* 
+  rm -rf /var/lib/apt/lists/*
 
 # Main image
 FROM docker.io/bitnami/redis:${REDIS_VERSION}
@@ -40,11 +40,15 @@ RUN pip3 install pandas redisearch
 ENV LIBDIR /opt/bitnami/redis/bin
 WORKDIR /data
 
-COPY --from=builder /build/RediSearch/src/redisearch.so  "$LIBDIR"
+COPY --from=builder /build/RediSearch/src/redisearch.so "$LIBDIR"
 COPY ./build_ipa_index.py /opt/
 COPY ./supervisord.conf /etc/supervisord.conf
+
+# change default entrypoint
+RUN mv /run.sh /run-redis.sh
+COPY ./run.sh /run.sh
 
 RUN echo "0 6 * * * root /usr/bin/python3 /opt/build_ipa_index.py >/dev/null 2>&1" > /etc/cron.d/build_ipa_index
 RUN chmod 644 /etc/cron.d/build_ipa_index
 
-ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT ["/run.sh"]
