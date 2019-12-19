@@ -3,7 +3,6 @@ import socket
 import time
 import pandas as pd
 import redis
-from redis.sentinel import Sentinel
 from redisearch import Client, TextField, TagField
 
 def wait_for_redis():
@@ -18,30 +17,6 @@ def wait_for_redis():
         time.sleep(1)
     print('Redis server ready', flush=True)
 
-def check_sentinel():
-    print('Checking if this instance is sentinel managed', flush=True)
-    try:
-        os.environ['REDIS_SENTINEL_HOST']
-    except KeyError:
-        print('REDIS_SENTINEL_HOST environment variable not set', flush=True)
-
-        return
-
-    sentinel = Sentinel([(os.environ['REDIS_SENTINEL_HOST'], os.environ.get('REDIS_SENTINEL_PORT_NUMBER', 26379))], socket_timeout=0.1)
-    sentinel_master = sentinel.discover_master(os.environ.get('REDIS_MASTER_SET', 'ipa-redisearch'))
-    if sentinel_master is not None:
-        hostname = socket.gethostname()
-        ip_addr = socket.gethostbyname(hostname)
-
-        if ip_addr != sentinel_master[0]: # this is a slave
-            print('This is a sentinel managed slave:', flush=True)
-            print('index updates are executed only on the master instance', flush=True)
-            sys.exit(0)
-        else:
-            print('This is a sentinel managed master', flush=True)
-    else:
-        raise Exception('Sentinel master not available') 
-
 def build_ipa_index():
     start_time = time.time()
     rc = redis.Redis(password=os.environ['REDIS_PASSWORD'])
@@ -52,7 +27,6 @@ def build_ipa_index():
     except:
         pass # Index already dropped
 
-    print('Creating index `IPAIndex`', flush=True)
     rs_client.create_index([
         TextField('ipa_code', weight=2.0),
         TextField('name', weight=2.0),
@@ -66,6 +40,7 @@ def build_ipa_index():
         TextField('rtd_pec'),
         TextField('rtd_mail'),
     ])
+    print('Created index `IPAIndex`', flush=True)
 
     print('Getting file `amministrazioni.txt` from https://www.indicepa.gov.it', flush=True)
     ipa_index_amm_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=amministrazioni.txt'
@@ -138,5 +113,7 @@ def get_first_pec(ipa_row):
     return None
 
 wait_for_redis()
-check_sentinel()
-build_ipa_index()
+try:
+    build_ipa_index()
+except redis.exceptions.ReadOnlyError:
+    print ('This instance is readonly')
