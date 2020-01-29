@@ -7,7 +7,7 @@ from redisearch import Client, TextField, TagField
 
 def wait_for_redis():
     print('Waiting for Redis server to be ready', flush=True)
-    rc = redis.Redis(password=os.environ['REDIS_PASSWORD'])
+    rc = redis.Redis(password=os.environ.get('REDIS_PASSWORD', ''))
     ping = False
     while ping == False:
         try:
@@ -19,7 +19,7 @@ def wait_for_redis():
 
 def build_ipa_index():
     start_time = time.time()
-    rc = redis.Redis(password=os.environ['REDIS_PASSWORD'])
+    rc = redis.Redis(password=os.environ.get('REDIS_PASSWORD', ''))
     rs_client = Client('IPAIndex', conn=rc)
 
     try:
