@@ -29,7 +29,7 @@ def build_ipa_index():
 
     rs_client.create_index([
         TextField('ipa_code', weight=2.0),
-        TextField('name', weight=2.0),
+        TextField('name', weight=2.0, sortable=True),
         TextField('site'),
         TextField('pec'),
         TextField('city', weight=1.4),
