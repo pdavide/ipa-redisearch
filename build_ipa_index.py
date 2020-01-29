@@ -51,6 +51,7 @@ def build_ipa_index():
         rs_client.add_document(
             row['cod_amm'],
             language='italian',
+            replace=True,
             **get_ipa_amm_item(row)
         )
 
