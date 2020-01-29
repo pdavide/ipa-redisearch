@@ -24,7 +24,7 @@ Supported env variables:
 The index name is `IPAIndex` with the following text fields:
 
 - `ipa_code` - weight: 2.0
-- `name` - weight: 2.0
+- `name` - weight: 2.0 - sortable
 - `site`
 - `pec`
 - `city` - weight: 1.4
