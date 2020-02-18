@@ -50,8 +50,10 @@ COPY ./supervisord.conf /etc/supervisord.conf
 # change default entrypoint
 RUN mv /run.sh /run-redis.sh
 COPY ./run.sh /run.sh
+COPY ./update-index.sh /update-index.sh
 
-RUN echo "0 6 * * * root /usr/bin/python3 /opt/build_ipa_index.py >/dev/null 2>&1" > /etc/cron.d/build_ipa_index
-RUN chmod 644 /etc/cron.d/build_ipa_index
+RUN /bin/echo -e "0 6 * * * root /update-index.sh > /proc/1/fd/1 2>/proc/1/fd/2\n" > /etc/cron.d/build_ipa_index
+RUN chmod 644 /etc/cron.d/build_ipa_index && \
+    chmod 544 /update-index.sh
 
 ENTRYPOINT ["/run.sh"]
