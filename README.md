@@ -19,6 +19,9 @@ Supported env variables:
 - [env vars supported in
   bitnami-docker-redis](https://github.com/bitnami/bitnami-docker-redis#configuration)
 
+*Do not use slashes (/) in REDIS_PASSWORD to not break the export of env
+variabile into cron script*
+
 ## Usage
 
 The index name is `IPAIndex` with the following text fields:
