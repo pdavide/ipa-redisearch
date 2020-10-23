@@ -1,1 +1,3 @@
 .python-version
+build.sh
+docker-compose.yml
