@@ -9,8 +9,8 @@ Italian Public Administrations.
 
 Supported args:
 
-- `REDIS_VERSION` (mandatory)
-- `REDISEARCH_GITHUB_BRANCH` (mandatory)
+- `REDIS_VERSION` (mandatory - minimium version 5.0.9)
+- `REDISEARCH_GITHUB_BRANCH` (mandatory - must be compatible with the configured Redis version)
 
 ## Run
 
