@@ -7,7 +7,7 @@ set -o pipefail
 
 export REDIS_ARGS="$@"
 
-/setup.sh
+/opt/bitnami/scripts/redis/setup.sh
 
 sed -i -e s/@REDIS_PASSWORD@/"${REDIS_PASSWORD-}"/g /update-index.sh
 
