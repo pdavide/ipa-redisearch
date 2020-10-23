@@ -22,6 +22,15 @@ def build_ipa_index():
     rc = redis.Redis(password=os.environ.get('REDIS_PASSWORD', ''))
     rs_client = Client('IPAIndex', conn=rc)
 
+    print('Getting file `amministrazioni.txt` from https://www.indicepa.gov.it', flush=True)
+    ipa_index_amm_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=amministrazioni.txt'
+    ipa_index_amm = pd.read_csv(ipa_index_amm_url, sep='\t', dtype=str)
+
+    print('Getting file `ou.txt` from https://www.indicepa.gov.it', flush=True)
+    ipa_index_ou_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=ou.txt'
+    ipa_index_ou = pd.read_csv(ipa_index_ou_url, sep='\t', na_values=['da_indicare', 'da_indicare@x.it'], dtype=str)
+    ipa_index_ou = ipa_index_ou.loc[lambda ipa_index_ou: ipa_index_ou['cod_ou'] == 'Ufficio_Transizione_Digitale']
+
     try:
         rs_client.drop_index()
     except:
@@ -42,10 +51,6 @@ def build_ipa_index():
     ])
     print('Created index `IPAIndex`', flush=True)
 
-    print('Getting file `amministrazioni.txt` from https://www.indicepa.gov.it', flush=True)
-    ipa_index_amm_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=amministrazioni.txt'
-    ipa_index_amm = pd.read_csv(ipa_index_amm_url, sep='\t', dtype=str)
-
     print('Feeding `IPAIndex` with data from `amministrazioni.txt`', flush=True)
     for index, row in ipa_index_amm.iterrows():
         rs_client.add_document(
@@ -54,11 +59,6 @@ def build_ipa_index():
             replace=True,
             **get_ipa_amm_item(row)
         )
-
-    print('Getting file `ou.txt` from https://www.indicepa.gov.it', flush=True)
-    ipa_index_ou_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=ou.txt'
-    ipa_index_ou = pd.read_csv(ipa_index_ou_url, sep='\t', na_values=['da_indicare', 'da_indicare@x.it'], dtype=str)
-    ipa_index_ou = ipa_index_ou.loc[lambda ipa_index_ou: ipa_index_ou['cod_ou'] == 'Ufficio_Transizione_Digitale']
 
     print('Feeding `IPAIndex` with data from `ou.txt`', flush=True)
     for index, row in ipa_index_ou.iterrows():
