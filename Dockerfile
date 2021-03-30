@@ -1,27 +1,12 @@
 ARG REDIS_VERSION
-FROM docker.io/bitnami/redis:${REDIS_VERSION} as builder
+ARG REDISEARCH_VERSION
+
+FROM redislabs/redisearch:${REDISEARCH_VERSION} as builder
 
 LABEL maintainer="Davide Porrovecchio <davide.porrovecchio@agid.gov.it>"
 
-ENV DEBIAN_FRONTEND noninteractive
-
-ARG REDISEARCH_GITHUB_BRANCH
-
-# Build redis-search module
-USER root
-
-RUN apt-get update && apt-get install -y git && \
-    mkdir -p /build-redisearch && cd ~/build-redisearch && \
-    git clone --branch ${REDISEARCH_GITHUB_BRANCH} --recursive https://github.com/RedisLabsModules/RediSearch.git && \
-    cd RediSearch && \
-    ./deps/readies/bin/getpy2 && \
-    ./system-setup.py && \
-    make fetch && \
-    make build && \
-    rm -rf /var/lib/apt/lists/*
-
 # Main image
-FROM docker.io/bitnami/redis:${REDIS_VERSION}
+FROM bitnami/redis:${REDIS_VERSION}
 
 USER 0
 
@@ -43,7 +28,7 @@ RUN pip3 install pandas redisearch
 ENV LIBDIR /opt/bitnami/redis/bin
 WORKDIR /data
 
-COPY --from=builder /build-redisearch/RediSearch/src/redisearch.so "$LIBDIR"
+COPY --from=builder /usr/lib/redis/modules/redisearch.so "$LIBDIR"
 COPY ./build_ipa_index.py /opt/
 COPY ./supervisord.conf /etc/supervisord.conf
 
