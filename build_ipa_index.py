@@ -23,11 +23,11 @@ def build_ipa_index():
     rs_client = Client('IPAIndex', conn=rc)
 
     print('Getting file `amministrazioni.txt` from https://www.indicepa.gov.it', flush=True)
-    ipa_index_amm_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=amministrazioni.txt'
+    ipa_index_amm_url = 'https://www.indicepa.gov.it/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt'
     ipa_index_amm = pd.read_csv(ipa_index_amm_url, sep='\t', dtype=str)
 
     print('Getting file `ou.txt` from https://www.indicepa.gov.it', flush=True)
-    ipa_index_ou_url = 'https://www.indicepa.gov.it/public-services/opendata-read-service.php?dstype=FS&filename=ou.txt'
+    ipa_index_ou_url = 'https://www.indicepa.gov.it/ipa-dati/dataset/7a2db7d8-4123-41b4-a1d6-d7b712a193f1/resource/4740588c-eb09-4ce8-92b0-86626508ad49/download/ou.txt'
     ipa_index_ou = pd.read_csv(ipa_index_ou_url, sep='\t', na_values=['da_indicare', 'da_indicare@x.it'], dtype=str)
     ipa_index_ou = ipa_index_ou.loc[lambda ipa_index_ou: ipa_index_ou['cod_ou'] == 'Ufficio_Transizione_Digitale']
 
